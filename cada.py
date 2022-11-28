@@ -1,13 +1,19 @@
+#
+# This code is an extention of the cada code available at
+# https://github.com/thomashelling/cada
+#
 # coding=utf-8
 
-from math import sqrt
-
 import networkx as nx
+from networkx.algorithms.community import asyn_fluidc
+from networkx.algorithms.community import greedy_modularity_communities as gmc
 import random
 import numpy as np
 import community
 import time
 import infomap
+import igraph as ig
+import leidenalg
 
 class cada():
 	def __init__(self, graph, algorithm='louvain', resolution=0.1):
@@ -15,6 +21,12 @@ class cada():
 		# First do community detection
 		if algorithm == 'louvain':
 			partition = community.best_partition(graph, resolution=resolution)
+		elif algorithm == 'leiden':
+			partition = self.run_leiden(graph)
+		elif algorithm == 'fluid':
+			partition = self.run_fluid(graph)
+		elif algorithm == 'greedy':
+			partition = self.run_greedy(graph,resolution)
 		else:
 			partition = self.run_infomap(graph)
 		
@@ -62,18 +74,62 @@ class cada():
 			
 		return pred
 
+	def run_leiden(self,graph):
+		"""
+		Creates partitions with the Leiden algorithm
+		"""
+		h = ig.Graph.from_networkx(graph)
+		part = leidenalg.find_partition(h, leidenalg.ModularityVertexPartition)
+		#part = leidenalg.find_partition(h, leidenalg.RBConfigurationVertexPartition,resolution_parameter = 0.5)
+		#part = leidenalg.find_partition(h, leidenalg.CPMVertexPartition,resolution_parameter = 0.05)
+		partition = {}
+
+		for ind,com in enumerate(part):
+			for node in com:
+				partition[node] = ind
+
+		return partition
+
+	def run_greedy(self,graph,resolution):
+		"""
+		Creates partitions with Clauset-Newman-Moore greedy modularity maximization
+		"""
+		best_n = int(graph.number_of_nodes()/10)
+		communities = gmc(graph,resolution=resolution,best_n=best_n)
+		partition = {}
+		print(f"nr of coms={len(communities)}")
+		for ind,com in enumerate(communities):
+			for node in com:
+				partition[node] = ind
+		
+		return partition
+
+	def run_fluid(self,graph):
+		"""
+		Creates partitions with async_fluidc
+		"""
+		k = int(graph.number_of_nodes()/100)
+		it = asyn_fluidc(graph,k=k)
+		partition = {}
+
+		for ind,com in enumerate(it):
+			for node in com:
+				partition[node] = ind
+
+		return partition
+
 	def run_infomap(self, graph):
 		"""
 		Runs Infomap with infomap package 
 		"""
 		infomapSimple = infomap.Infomap("--two-level --silent")
-		network = infomapSimple.network()
+		network = infomapSimple.network
 		
 		for e in graph.edges():
 			network.addLink(e[0], e[1])
 
 		partition = {}
-		infomapSimple.run();
+		infomapSimple.run()
 		for node in infomapSimple.iterTree():
 			if node.isLeaf():
 				partition[node.physicalId] = node.moduleIndex()
@@ -112,4 +168,3 @@ class cada():
 				break
 
 		return anomalies
-
