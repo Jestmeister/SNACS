@@ -1,11 +1,11 @@
 import networkx as nx
 import numpy as np
+from vars import vars
+var = vars()
 
 #Parameters
-n_default = 100000
-p_default = 0.2
-n_ls = 1000*np.array([1,2,5,10,20,50,100,200,500])
-p_ls = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5]
+p_default = 0.05
+
 
 def get_degree_dist(G):
     # G is undirected
@@ -31,24 +31,24 @@ def inject_anomalies(n_anomalies, n, graph):
 
 if __name__=='__main__':
     #probability run
-    for p in p_ls:
+    for p in var.p_ls:
         print(f"Running probability {p}\n")
         #Parameters
-        k = int(2*np.power(n_default,0.15))
-        n_anomalies = int(n_default/100)
+        k = int(2*np.power(var.n_default,0.15))
+        n_anomalies = int(var.n_default/100)
         path = f"art_data/artdat-p{p}.txt"
 
         #Generate artificial data
-        ws_graph = nx.newman_watts_strogatz_graph(n=n_default,k=k,p=p)
+        ws_graph = nx.newman_watts_strogatz_graph(n=var.n_default,k=k,p=p)
 
         #intorduce anomalies
-        anomaly_graph = inject_anomalies(n_anomalies, n_default, ws_graph)
+        anomaly_graph = inject_anomalies(n_anomalies, var.n_default, ws_graph)
 
         #Save data    
         nx.write_adjlist(anomaly_graph,path)
-
+    
     #node run
-    for n in n_ls:
+    for n in var.n_ls:
         print(f"Running nodes {n}\n")
         #Parameters
         k = int(2*np.power(n,0.15))

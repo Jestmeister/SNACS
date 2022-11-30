@@ -1,4 +1,3 @@
-#
 # This code is an extention of the cada code available at
 # https://github.com/thomashelling/cada
 #
@@ -22,7 +21,7 @@ class cada():
 		if algorithm == 'louvain':
 			partition = community.best_partition(graph, resolution=resolution)
 		elif algorithm == 'leiden':
-			partition = self.run_leiden(graph)
+			partition = self.run_leiden(graph,resolution=resolution)
 		elif algorithm == 'fluid':
 			partition = self.run_fluid(graph)
 		elif algorithm == 'greedy':
@@ -74,14 +73,14 @@ class cada():
 			
 		return pred
 
-	def run_leiden(self,graph):
+	def run_leiden(self,graph,resolution):
 		"""
 		Creates partitions with the Leiden algorithm
 		"""
 		h = ig.Graph.from_networkx(graph)
-		part = leidenalg.find_partition(h, leidenalg.ModularityVertexPartition)
+		#part = leidenalg.find_partition(h, leidenalg.ModularityVertexPartition)
 		#part = leidenalg.find_partition(h, leidenalg.RBConfigurationVertexPartition,resolution_parameter = 0.5)
-		#part = leidenalg.find_partition(h, leidenalg.CPMVertexPartition,resolution_parameter = 0.05)
+		part = leidenalg.find_partition(h, leidenalg.CPMVertexPartition,resolution_parameter = resolution)
 		partition = {}
 
 		for ind,com in enumerate(part):
