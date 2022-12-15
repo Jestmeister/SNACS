@@ -8,4 +8,4 @@ File explanation:
   
   -artificial_data.py : Generates artificial data with the Newman-Watts-Strogatz model and injects it with anomalies
   
-  -main.ipynb : Runs the experiments
+  -main.ipynb : Runs the experiments for the artificial data
